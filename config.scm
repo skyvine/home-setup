@@ -3,10 +3,7 @@
 
 ; This is the directory that all the files will be set up in
 (define home
-  (string-append
-    (get-environment-variable "HOME")
-    "/projects/home-setup/test"
-  )
+  (get-environment-variable "HOME")
 )
 
 ; github-user and github-repo determine the directory to clone into home
