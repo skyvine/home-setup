@@ -4,32 +4,8 @@
 
 (use-modules (srfi srfi-1) (srfi srfi-98))
 
-(define home (get-environment-variable "HOME"))
-(define dotdir ".dotdirs")
-
-(define* (in-home paths #:key (base home))
-  (if (null? paths)
-    base
-    (in-home (drop paths 1) #:base (string-append base "/" (first paths)))
-  )
-)
-
-(define (in-dotdir paths)
-  (in-home (append (list dotdir) paths))
-)
-
-(define (safe-mkdir dir)
-  (if (not (access? dir F_OK))
-    (mkdir dir)
-  )
-)
-
-(define (safe-symlink oldpath newpath)
-  (if (access? newpath F_OK)
-    (rename-file newpath (string-append newpath ".orig"))
-  )
-  (symlink oldpath newpath)
-)
+(load "config.scm")
+(load "filesystem_support.scm")
 
 (define (run-setup-files-aux rootname dirstream)
   (let ((currname (readdir dirstream)))
@@ -55,7 +31,7 @@
   ; function because it walks the entire tree, while here we know that we only
   ; want to look one directory deep; in fact, executing all files named
   ; 'setup.scm' anywhere in the directory tree would be misbehavior that may
-  ; lead to incompatibilities with existing scheme software
+  ; lead to bugs
   (run-setup-files-aux rootname (opendir rootname))
 )
 
@@ -64,13 +40,15 @@
   ; the home directory itself doesn't work because the home directory may exist,
   ; but be empty (and thus a valid target to clone into), which is important for
   ; unpriveleged users
-  (unless (access? (in-dotdir '()) F_OK)
+  (unless (access? dotdir F_OK)
     (system (string-append
-              "git clone --recursive -j16 https://github.com/saffronsnail/home "
-              home
+              "git clone --recursive -j16 " (in-dir "https://github.com/"
+                                                    (list github-user github-repo)
+                                            )
+              " " home
             )
     )
   )
-  (run-setup-files (in-dotdir '()))
+  (run-setup-files dotdir)
 )
 
