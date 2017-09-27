@@ -1,14 +1,17 @@
 ; The config file defines a number of variables that users might be interested
 ; in changing.
 
-; This is the directory that all the files will be set up in
+; This is the directory that all the files should end up in
 (define home
-  (get-environment-variable "HOME")
+  (string-append (getenv "HOME") "/projects/home-setup/test")
 )
+
+; This is the directory where all of the files will be prepared
+(define stage (string-append home "/stage"))
 
 ; github-user and github-repo determine the directory to clone into home
 (define github-user
-  (get-environment-variable "USER")
+  (getenv "USER")
 )
 (define github-repo
   "home"
@@ -17,7 +20,8 @@
 ; This is the directory where the human-editable config files (such as .zshrc)
 ; are kept; the programs themselves (such as zsh) access them through symlinks
 ; or enviornment variables
+; NOTE that this MUST be in the stage
 (define dotdir
-  (string-append home "/.dotdirs")
+  (string-append stage "/.dotdirs")
 )
 

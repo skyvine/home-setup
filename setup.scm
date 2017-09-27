@@ -2,7 +2,11 @@
 -e main -s
 !#
 
-(use-modules (srfi srfi-1) (srfi srfi-98))
+(define real-system system)
+(define (system cmd)
+  (write "Running ") (write cmd) (newline)
+  (real-system cmd)
+)
 
 (load "config.scm")
 (load "filesystem_support.scm")
@@ -35,20 +39,39 @@
   (run-setup-files-aux rootname (opendir rootname))
 )
 
+(define (create-stage)
+  (if (access? stage W_OK)
+    (system (string-append "rm -R " stage "/{*,.*}"))
+    (system (string-append "mkdir -p " stage))
+  )
+)
+
+(define (move-stage-to-home)
+  (system (string-append "mv " (in-dir stage "/{*,.*} ") home))
+)
+
 (define (main args)
+  (create-stage)
   ; I use the dotdir folder to test if the home is already set up; testing for
   ; the home directory itself doesn't work because the home directory may exist,
   ; but be empty (and thus a valid target to clone into), which is important for
   ; unpriveleged users
   (unless (access? dotdir F_OK)
-    (system (string-append
-              "git clone --recursive -j16 " (in-dir "https://github.com/"
-                                                    (list github-user github-repo)
-                                            )
-              " " home
-            )
+    (let ((use-https "-c 'url.https://github.com/.insteadOf'='git@github.com:' "))
+      (system (string-append
+                "git clone " use-https (in-dir "https://github.com/"
+                                                  (list github-user github-repo)
+                                          )
+                " " stage
+              )
+      )
+      (chdir stage)
+      (system (string-append "git " use-https "submodule init"))
+      (system (string-append "git " use-https "submodule update"))
     )
   )
+  (move-stage-to-home)
+  (define dotdir (in-dir home (string-drop dotdir (string-length stage))))
   (run-setup-files dotdir)
 )
 
