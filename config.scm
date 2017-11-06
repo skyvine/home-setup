@@ -3,7 +3,7 @@
 
 ; This is the directory that all the files will be set up in
 (define home
-  (get-environment-variable "HOME")
+  (string-append (get-environment-variable "HOME") "/clone")
 )
 
 ; github-user and github-repo determine the directory to clone into home

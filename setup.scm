@@ -1,4 +1,4 @@
-#! /usr/bin/guile \
+#! /run/current-system/sw/bin/guile \
 -e main -s
 !#
 
